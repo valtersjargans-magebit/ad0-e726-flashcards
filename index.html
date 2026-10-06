@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AD0-E726 Flashcards</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --ok:#22c55e; --bad:#ef4444; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:24px; }
+  h1 { font-size:20px; margin:0 0 12px; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:16px; }
+  button, select { background:var(--card); color:var(--text); border:1px solid #334155; border-radius:8px; padding:8px 14px; font:inherit; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  .stats { color:var(--muted); margin-bottom:12px; font-size:14px; }
+  .progress { width:min(720px,100%); height:6px; background:#334155; border-radius:3px; margin-bottom:16px; overflow:hidden; }
+  .progress div { height:100%; background:var(--ok); width:0; transition:width .3s; }
+  #stage { width:min(720px,100%); display:flex; flex-direction:column; align-items:center; }
+  .card { width:100%; min-height:320px; perspective:1200px; cursor:pointer; }
+  .inner { position:relative; width:100%; min-height:320px; transition:transform .45s; transform-style:preserve-3d; }
+  .card.flipped .inner { transform:rotateY(180deg); }
+  .face { position:absolute; inset:0; background:var(--card); border-radius:14px; padding:28px; backface-visibility:hidden; display:flex; flex-direction:column; justify-content:center; box-shadow:0 10px 30px rgba(0,0,0,.4); overflow:auto; }
+  .back { transform:rotateY(180deg); border:1px solid var(--accent); }
+  .tag { position:absolute; top:12px; left:16px; font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:.05em; }
+  .q { font-size:20px; font-weight:600; }
+  .a { white-space:pre-wrap; font-family:ui-monospace, monospace; font-size:15px; }
+  .hint { position:absolute; bottom:10px; right:16px; font-size:12px; color:var(--muted); }
+  .grade { display:flex; gap:12px; margin-top:16px; }
+  .grade .again { border-color:var(--bad); }
+  .grade .good { border-color:var(--ok); }
+  .done { text-align:center; padding:60px 0; font-size:18px; }
+  .keys { color:var(--muted); font-size:13px; margin-top:14px; }
+</style>
+</head>
+<body>
+<h1>AD0-E726 Front-End Professional</h1>
+<div class="bar">
+  <select id="section">
+    <option value="all">All sections</option>
+    <option value="1">1 Theme management (16%)</option>
+    <option value="2">2 Layout XML &amp; templates (23%)</option>
+    <option value="3">3 Styles (19%)</option>
+    <option value="4">4 JavaScript (20%)</option>
+    <option value="5">5 Admin configuration (12%)</option>
+    <option value="6">6 CLI (10%)</option>
+  </select>
+  <button id="onlyHard">Only cards I missed</button>
+  <button id="reset">Reset progress</button>
+</div>
+<div class="stats" id="stats"></div>
+<div class="progress"><div id="bar"></div></div>
+<div id="stage"></div>
+<div class="keys">Space = flip · 1 = again · 2 = got it</div>
+
+<script>
+const CARDS = [
+  // Section 1
+  [1, "Where do you create a new storefront theme?", "app/design/frontend/<Vendor>/<theme>"],
+  [1, "Which TWO files are required to create a theme?", "theme.xml\nregistration.php\n\n(NOT composer.json, NOT etc/view.xml)"],
+  [1, "What goes in theme.xml?", "<title>My Theme</title>\n<parent>Magento/luma</parent>\n<media><preview_image>media/preview.jpg</preview_image></media>"],
+  [1, "registration.php for a theme?", "ComponentRegistrar::register(\n  ComponentRegistrar::THEME,\n  'frontend/Vendor/theme',\n  __DIR__\n);"],
+  [1, "A theme with no <parent> in theme.xml is…?", "A top-level theme (like Magento/blank). Luma's parent is Magento/blank."],
+  [1, "Extend Magento_Theme's 1column page layout in a theme — path?", "<theme>/Magento_Theme/page_layout/1column.xml"],
+  [1, "Override Magento_Catalog's view/frontend/templates/product/list.phtml in a theme?", "<theme>/Magento_Catalog/templates/product/list.phtml\n\n(drop 'view/frontend' from the path)"],
+  [1, "Override Magento_Checkout's view/frontend/web/template/summary.html in a theme?", "<theme>/Magento_Checkout/web/template/summary.html"],
+  [1, "Template fallback order?", "child theme → parent theme → module view/frontend → module view/base"],
+  [1, "Where are product image sizes configured?", "<theme>/etc/view.xml\n<images module=\"Magento_Catalog\">\n  <image id=\"category_page_grid\" type=\"small_image\">\n    <width>240</width><height>300</height>"],
+  [1, "Command to regenerate resized product images?", "bin/magento catalog:images:resize"],
+  [1, "Where does a theme keep its translations?", "<theme>/i18n/<locale>.csv  e.g. i18n/en_US.csv\nFormat: \"Original\",\"Translated\""],
+  [1, "Translation priority, lowest → highest?", "module i18n → language package → parent theme → child theme → database (inline translation)"],
+  [1, "Two strings compete: parent theme vs child theme csv. Who wins?", "Child theme. And DB (inline) translations beat both."],
+  [1, "How do you mark a string translatable in phtml / layout XML / email?", "phtml: __('Text')\nlayout: <argument ... translate=\"true\">\nemail: {{trans \"Text\"}}"],
+  [1, "Where to enable inline translation?", "Stores > Configuration > Advanced > Developer > Translate Inline\n(Developer tab visible only in developer mode)"],
+
+  // Section 2
+  [2, "Correct XML to remove a block?", "<referenceBlock name=\"block.name\" remove=\"true\"/>\n\nTraps: <remove element=\"\"/>, action=\"remove\" — don't exist"],
+  [2, "remove=\"true\" vs display=\"false\"?", "remove: element + children deleted from the layout\ndisplay=\"false\": not rendered, but still exists (can be moved/referenced)"],
+  [2, "Move a block into another container, as the first child?", "<move element=\"x\" destination=\"y\" before=\"-\"/>"],
+  [2, "before=\"-\" / after=\"-\" mean?", "before=\"-\" = first in parent\nafter=\"-\" = last in parent"],
+  [2, "What does <remove src=\"...\"/> do?", "Removes a static asset (css/js) added in <head>. Only for head assets, not blocks."],
+  [2, "Include another handle in a layout file?", "<update handle=\"customer_account\"/>"],
+  [2, "Extend Magento_Customer/view/frontend/layout/customer_account.xml in a theme?", "<theme>/Magento_Customer/layout/customer_account.xml\n(merged with the original)"],
+  [2, "OVERRIDE (replace) a module's layout file in a theme?", "<theme>/Magento_Customer/layout/override/base/customer_account.xml"],
+  [2, "Override a PARENT THEME's layout file?", "<theme>/Magento_Customer/layout/override/theme/Magento/luma/customer_account.xml"],
+  [2, "Extend vs override layout — which is preferred?", "Extend (merge). Overriding replaces the whole file and breaks on upgrades."],
+  [2, "Name the frontend page layouts.", "empty, 1column, 2columns-left, 2columns-right, 3columns"],
+  [2, "Add a custom page layout in a theme — which files?", "<theme>/Magento_Theme/page_layout/my-layout.xml\n<theme>/Magento_Theme/layouts.xml  (declares it so admin shows it)"],
+  [2, "Page layout vs page configuration file?", "Page layout (page_layout/): containers only, the skeleton\nPage configuration (layout/): <page> with <head> and <body>, blocks"],
+  [2, "Generic layout file?", "Root <layout>, no head/body. Used for AJAX/partial responses."],
+  [2, "Handle for the product page? For one specific product?", "catalog_product_view (route_controller_action)\ncatalog_product_view_id_42, _type_simple, _sku_<sku>"],
+  [2, "Handle loaded on every page?", "default"],
+  [2, "Container vs block?", "Container: only wraps children (htmlTag, htmlClass, htmlId); empty = not rendered.\nBlock: has a class + template, renders content."],
+  [2, "What does cacheable=\"false\" on a block do?", "Makes the WHOLE page uncacheable by full page cache. Avoid."],
+  [2, "Pass data to a block from layout XML?", "<arguments>\n  <argument name=\"title\" xsi:type=\"string\" translate=\"true\">Hi</argument>\n</arguments>\nRead: $block->getData('title') / $block->getTitle()"],
+  [2, "Argument xsi:type values?", "string, boolean, number, null, array, object, url, options, helper, const"],
+  [2, "Pass a view model to a template?", "<argument name=\"view_model\" xsi:type=\"object\">Vendor\\Module\\ViewModel\\X</argument>\nClass implements ArgumentInterface"],
+  [2, "Change a block's template in layout?", "<referenceBlock name=\"x\" template=\"Vendor_Module::new.phtml\"/>"],
+  [2, "Which escaper for text inside an HTML element?", "$escaper->escapeHtml($value)\n(optionally allowed tags: escapeHtml($v, ['b','a']))"],
+  [2, "Which escaper for an HTML attribute?", "$escaper->escapeHtmlAttr($value)"],
+  [2, "Which escaper for href/src?", "$escaper->escapeUrl($url)"],
+  [2, "Which escaper inside inline JavaScript?", "$escaper->escapeJs($value)"],
+  [2, "Mark intentional raw output in phtml?", "/* @noEscape */ $block->getChildHtml()\n($block->escape*() is deprecated → use $escaper)"],
+  [2, "Enable template hints?", "bin/magento dev:template-hints:enable"],
+
+  // Section 3
+  [3, "Compiled vs partial LESS file — how to tell?", "No underscore = root, compiled to CSS (styles-m.less)\nUnderscore = partial, only imported (_module.less)"],
+  [3, "styles-m.less vs styles-l.less?", "styles-m: mobile + common styles (all widths)\nstyles-l: desktop (min-width 768px)"],
+  [3, "Easiest way to ADD styles on top of the parent theme?", "<theme>/web/css/source/_extend.less"],
+  [3, "What happens if a child theme creates _theme.less?", "It REPLACES the parent's _theme.less — copy Luma's content first or its variables are lost."],
+  [3, "Change only theme variables (e.g. primary color)?", "<theme>/web/css/source/_theme.less (or _variables.less)\n@primary__color: #c00;"],
+  [3, "Replace a module's styles completely in a theme?", "<theme>/Magento_Catalog/web/css/source/_module.less"],
+  [3, "Extend a module's styles without replacing them?", "<theme>/Magento_Catalog/web/css/source/_extend.less\n(collected by //@magento_import)"],
+  [3, "What does //@magento_import do?", "Magento directive: imports a file with that name from ALL modules/themes via fallback.\nLeading // hides it from the plain LESS compiler."],
+  [3, "Where is the Magento UI library?", "lib/web/css/source/lib/  (mixins like .lib-button(), .lib-font-face(), .lib-css())"],
+  [3, "Write styles for ALL screen sizes (UI library pattern)?", "& when (@media-common = true) { ... }"],
+  [3, "Write desktop-only styles?", ".media-width(@extremum, @break) when (@extremum = 'min') and (@break = @screen__m) { ... }"],
+  [3, "Mobile/desktop breakpoint variable?", "@screen__m = 768px"],
+  [3, "Two LESS compilation modes and where to switch?", "Server-side (default, PHP) / client-side (less.js in browser)\nStores > Config > Advanced > Developer > Frontend Development Workflow"],
+  [3, "Grunt themes config file?", "dev/tools/grunt/configs/themes.js (copy to local-themes.js)\ngrunt clean / exec / less / watch"],
+  [3, "Edited LESS but no change on the page (server-side). What to delete?", "pub/static/frontend/<Vendor>/<theme>\nvar/view_preprocessed"],
+  [3, "Add a custom CSS file to every page?", "<theme>/web/css/custom.less\ndefault_head_blocks.xml: <css src=\"css/custom.css\"/>\n(Magento compiles the .less with the same name)"],
+  [3, "Production CSS settings location?", "Stores > Config > Advanced > Developer > CSS Settings\n(merge, minify, critical path)"],
+
+  // Section 4
+  [4, "Where can requirejs-config.js live?", "<module>/view/<area>/requirejs-config.js\n<theme>/requirejs-config.js\n<theme>/<Vendor_Module>/requirejs-config.js\n(all merged into one file)"],
+  [4, "RequireJS: replace a JS module everywhere with your own?", "map: { '*': { 'Magento_X/js/foo': 'Vendor_Module/js/foo' } }"],
+  [4, "RequireJS: load a non-AMD library that needs jQuery?", "paths: { slick: 'Vendor_Module/js/slick' },\nshim: { slick: { deps: ['jquery'] } }"],
+  [4, "RequireJS: load a script on every page?", "deps: ['Vendor_Module/js/file']"],
+  [4, "'Vendor_Module/js/foo' resolves to which file?", "Vendor/Module/view/frontend/web/js/foo.js"],
+  [4, "Two ways to init a JS component from a template?", "data-mage-init='{\"Vendor_Module/js/foo\": {\"opt\":1}}'\n<script type=\"text/x-magento-init\">{\"#el\": {\"Vendor_Module/js/foo\": {}}}<\/script>"],
+  [4, "x-magento-init with \"*\" as selector means?", "No element — component runs with config only."],
+  [4, "Declare a mixin?", "config: { mixins: {\n  'Magento_Checkout/js/view/minicart': {\n    'Vendor_Module/js/minicart-mixin': true\n  }\n} }\n(false disables it)"],
+  [4, "Which THREE scopes can declare mixins?", "view/frontend, view/base, view/adminhtml"],
+  [4, "Mixin for a UI component?", "return function (Target) {\n  return Target.extend({ method: function () { return this._super(); } });\n};"],
+  [4, "Mixin for a jQuery widget?", "return function (widget) {\n  $.widget('mage.name', widget, { ... });\n  return $.mage.name;\n};"],
+  [4, "Mixin for a plain function?", "mage/utils/wrapper:\nreturn wrapper.wrap(target, function (original, ...args) { ... });"],
+  [4, "TWO valid ways to translate 'Add to Quote' in JS?", "$.mage.__('Add to Quote')\ndefine(['mage/translate'], function ($t) { $t('Add to Quote'); })\n\nNOT: __() or trans()"],
+  [4, "Translate text in a Knockout template?", "data-bind=\"i18n: 'Text'\"\n<!-- ko i18n: 'Text' --><!-- /ko -->\n<translate args=\"'Text'\"/>"],
+  [4, "Where does the JS translation dictionary come from?", "js-translation.json, generated by static content deploy from i18n csv files"],
+  [4, "HTML attribute for Knockout bindings?", "data-bind"],
+  [4, "Where do Knockout .html templates go in a module?", "Vendor/Module/view/frontend/web/template/\n(NOT templates/, NOT web/js/template)"],
+  [4, "Set a UI component's template?", "Component.extend({ defaults: { template: 'Vendor_Module/name' } })\n→ web/template/name.html"],
+  [4, "Magento custom Knockout bindings (name 4)?", "scope, i18n, afterRender, mageInit (also collapsible, outerClick, fadeVisible)"],
+  [4, "Bind a DOM area to a UI component from jsLayout?", "<div data-bind=\"scope: 'componentName'\"> ... </div>"],
+  [4, "Knockout observable basics?", "ko.observable(1), ko.observableArray([]), ko.computed(fn)\nread: value()  write: value(5)"],
+  [4, "Define a jQuery widget?", "$.widget('mage.myWidget', {\n  options: {},\n  _create: function () {}\n});\nreturn $.mage.myWidget;"],
+  [4, "Extend an existing jQuery widget?", "$.widget('mage.myWidget', $.mage.collapsible, { ... this._super() ... })"],
+  [4, "Call a jQuery widget method?", "$('#el').myWidget('open');"],
+  [4, "_create vs _init in a widget?", "_create: once when the widget is created\n_init: every time the widget is called"],
+  [4, "Name core Magento jQuery widgets.", "collapsible, accordion, tabs, modal, dropdown, menu, loader, calendar"],
+
+  // Section 5
+  [5, "Apply a theme to a store view?", "Content > Design > Configuration → store view row → Edit → Applied Theme"],
+  [5, "What is a Design Rule (user agent exception)?", "Use a different theme for specific user agents (e.g. a mobile browser).\nContent > Design > Configuration"],
+  [5, "Schedule a theme for a date range?", "Content > Design > Schedule → Add Design Change (store, theme, from/to)"],
+  [5, "Change the store logo from admin?", "Content > Design > Configuration → store view → Header → Logo Image"],
+  [5, "Category design settings?", "Catalog > Categories > Design:\nUse Parent Category Settings, Theme, Layout, Custom Layout Update, Apply Design to Products\n+ Schedule Design Update"],
+  [5, "Product design settings?", "Catalog > Products > Design:\nLayout, Display Product Options In, Custom Layout Update\n+ Schedule Design Update"],
+  [5, "CMS page design settings?", "Content > Pages > Design: Layout, Custom Layout Update\nCustom Design Update: from/to, new theme, new layout"],
+  [5, "Custom Layout Update file name for one product?", "catalog_product_view_selectable_<sku>_<name>.xml\n(category: _<categoryId>_, cms: cms_page_view_selectable_<identifier>_<name>.xml)"],
+  [5, "Customize a transactional email in admin — steps?", "1. Marketing > Communications > Email Templates > Add New\n2. Load Default Template → edit → save\n3. Assign in Stores > Configuration (e.g. Sales > Sales Emails)"],
+  [5, "Customize a transactional email in a theme?", "<theme>/Magento_Sales/email/order_new.html\nHeader/footer: <theme>/Magento_Email/email/header.html, footer.html"],
+  [5, "Email template syntax: variable, translation, header include?", "{{var order.increment_id}}\n{{trans \"Text\"}}\n{{template config_path=\"design/email/header_template\"}}"],
+  [5, "Email styles files?", "web/css/email.less, email-inline.less, source/_email-extend.less"],
+
+  // Section 6
+  [6, "Deploy static content for one theme?", "bin/magento setup:static-content:deploy -f en_US --theme Vendor/theme\n(-f needed outside production mode)"],
+  [6, "cache:clean vs cache:flush?", "clean: removes Magento cache types (safe)\nflush: wipes the whole cache storage"],
+  [6, "Switch to developer mode?", "bin/magento deploy:mode:set developer\n(show: deploy:mode:show)"],
+  [6, "Production vs developer mode for static files?", "Production: must run static-content:deploy, no on-demand generation\nDeveloper: generated on request"],
+  [6, "Publish LESS sources for Grunt / client-side compilation?", "bin/magento dev:source-theme:deploy --theme Vendor/theme css/styles-m css/styles-l"],
+  [6, "Changed a layout XML file — which caches?", "layout + full_page"],
+  [6, "Collect translatable phrases into a csv?", "bin/magento i18n:collect-phrases -o file.csv <path>"],
+  [6, "Commerce Cloud: CLI for environments/ssh/logs?", "magento-cloud CLI"],
+  [6, "Commerce Cloud: build/deploy tool and its config file?", "ece-tools\n.magento.env.yaml (SCD_STRATEGY, SCD_THREADS, SKIP_SCD, SCD_MATRIX)"],
+  [6, "Commerce Cloud: CDN / full page cache and monitoring?", "Fastly (CDN + FPC), New Relic (monitoring)"],
+];
+
+const KEY = 'ad0e726-progress';
+let progress = JSON.parse(localStorage.getItem(KEY) || '{}'); // id -> 'good' | 'again'
+let queue = [], current = null, onlyHard = false;
+
+function save() { localStorage.setItem(KEY, JSON.stringify(progress)); }
+function pool() {
+  const s = document.getElementById('section').value;
+  return CARDS.map((c, i) => ({ id: i, sec: c[0], q: c[1], a: c[2] }))
+    .filter(c => s === 'all' || String(c.sec) === s)
+    .filter(c => !onlyHard || progress[c.id] === 'again');
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function build() {
+  const p = pool();
+  queue = shuffle(p.filter(c => progress[c.id] !== 'good'));
+  if (!queue.length && !onlyHard) queue = [];
+  next();
+}
+function stats() {
+  const p = pool().length ? CARDS.map((c, i) => i).filter(i => {
+    const s = document.getElementById('section').value; return s === 'all' || String(CARDS[i][0]) === s;
+  }) : [];
+  const good = p.filter(i => progress[i] === 'good').length;
+  const again = p.filter(i => progress[i] === 'again').length;
+  document.getElementById('stats').textContent = `${good} known · ${again} missed · ${p.length - good} left in this set`;
+  document.getElementById('bar').style.width = p.length ? (good / p.length * 100) + '%' : '0';
+}
+function next() {
+  stats();
+  const stage = document.getElementById('stage');
+  current = queue.shift();
+  if (!current) {
+    stage.innerHTML = `<div class="done">Done with this set 🎉<br><br><button onclick="resetSection()">Go through it again</button></div>`;
+    return;
+  }
+  stage.innerHTML = `
+    <div class="card" id="card" onclick="flip()">
+      <div class="inner">
+        <div class="face front"><span class="tag">Section ${current.sec}</span><div class="q"></div><span class="hint">click to flip</span></div>
+        <div class="face back"><span class="tag">Section ${current.sec}</span><div class="a"></div></div>
+      </div>
+    </div>
+    <div class="grade"><button class="again" onclick="grade('again')">Again (1)</button><button class="good" onclick="grade('good')">Got it (2)</button></div>`;
+  stage.querySelector('.q').textContent = current.q;
+  stage.querySelector('.a').textContent = current.a;
+}
+function flip() { document.getElementById('card')?.classList.toggle('flipped'); }
+function grade(g) {
+  if (!current) return;
+  progress[current.id] = g; save();
+  if (g === 'again') queue.splice(Math.min(3, queue.length), 0, current);
+  next();
+}
+function resetSection() {
+  pool().forEach(c => delete progress[c.id]); save(); build();
+}
+document.getElementById('section').onchange = build;
+document.getElementById('onlyHard').onclick = e => {
+  onlyHard = !onlyHard;
+  e.target.textContent = onlyHard ? 'Show all cards' : 'Only cards I missed';
+  if (onlyHard) { queue = shuffle(pool()); next(); } else build();
+};
+document.getElementById('reset').onclick = () => { if (confirm('Reset all progress?')) { progress = {}; save(); build(); } };
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); flip(); }
+  if (e.key === '1') grade('again');
+  if (e.key === '2') grade('good');
+});
+build();
+</script>
+</body>
+</html>
