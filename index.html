@@ -2,245 +2,468 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>AD0-E726 Flashcards</title>
 <style>
-  :root { --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --ok:#22c55e; --bad:#ef4444; }
-  * { box-sizing:border-box; }
-  body { margin:0; font:16px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:24px; }
-  h1 { font-size:20px; margin:0 0 12px; }
-  .bar { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:16px; }
-  button, select { background:var(--card); color:var(--text); border:1px solid #334155; border-radius:8px; padding:8px 14px; font:inherit; cursor:pointer; }
-  button:hover { border-color:var(--accent); }
-  .stats { color:var(--muted); margin-bottom:12px; font-size:14px; }
-  .progress { width:min(720px,100%); height:6px; background:#334155; border-radius:3px; margin-bottom:16px; overflow:hidden; }
-  .progress div { height:100%; background:var(--ok); width:0; transition:width .3s; }
-  #stage { width:min(720px,100%); display:flex; flex-direction:column; align-items:center; }
-  .card { width:100%; min-height:320px; perspective:1200px; cursor:pointer; }
-  .inner { position:relative; width:100%; min-height:320px; transition:transform .45s; transform-style:preserve-3d; }
-  .card.flipped .inner { transform:rotateY(180deg); }
-  .face { position:absolute; inset:0; background:var(--card); border-radius:14px; padding:28px; backface-visibility:hidden; display:flex; flex-direction:column; justify-content:center; box-shadow:0 10px 30px rgba(0,0,0,.4); overflow:auto; }
-  .back { transform:rotateY(180deg); border:1px solid var(--accent); }
-  .tag { position:absolute; top:12px; left:16px; font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:.05em; }
-  .q { font-size:20px; font-weight:600; }
-  .a { white-space:pre-wrap; font-family:ui-monospace, monospace; font-size:15px; }
-  .hint { position:absolute; bottom:10px; right:16px; font-size:12px; color:var(--muted); }
-  .grade { display:flex; gap:12px; margin-top:16px; }
-  .grade .again { border-color:var(--bad); }
-  .grade .good { border-color:var(--ok); }
-  .done { text-align:center; padding:60px 0; font-size:18px; }
-  .keys { color:var(--muted); font-size:13px; margin-top:14px; }
+  :root {
+    --bg:#0b1120; --panel:#162033; --panel2:#1d2a42; --line:#2a3955;
+    --text:#e6edf7; --muted:#8fa0b8; --accent:#38bdf8; --ok:#22c55e; --bad:#f87171; --warn:#fbbf24;
+    --code:#0f172a;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f1f5f9; --panel:#ffffff; --panel2:#f8fafc; --line:#e2e8f0; --text:#0f172a; --muted:#64748b; --code:#f1f5f9; }
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { min-height:100dvh; display:flex; flex-direction:column; }
+
+  header { position:sticky; top:0; z-index:5; background:var(--bg); padding:calc(10px + env(safe-area-inset-top)) 16px 8px; border-bottom:1px solid var(--line); }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:8px; max-width:760px; margin:0 auto; }
+  h1 { font-size:17px; margin:0; font-weight:700; }
+  .stats { font-size:13px; color:var(--muted); white-space:nowrap; }
+  .progress { height:4px; background:var(--line); border-radius:2px; margin:8px auto 10px; overflow:hidden; max-width:760px; }
+  .progress div { height:100%; width:0; background:var(--ok); transition:width .3s; }
+  .chips { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; max-width:760px; margin:0 auto; padding-bottom:2px; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { flex:0 0 auto; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:999px; padding:6px 12px; font-size:13px; cursor:pointer; }
+  .chip.on { background:var(--accent); border-color:var(--accent); color:#04121f; font-weight:600; }
+
+  main { flex:1; width:100%; max-width:760px; margin:0 auto; padding:14px 14px calc(96px + env(safe-area-inset-bottom)); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:0 6px 24px rgba(0,0,0,.18); }
+  .meta { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .tag { font-size:11px; letter-spacing:.04em; text-transform:uppercase; padding:3px 8px; border-radius:6px; background:var(--panel2); color:var(--accent); border:1px solid var(--line); }
+  .tag.sample { color:var(--warn); }
+  .q { font-size:20px; font-weight:650; line-height:1.35; margin:0; }
+  .reveal { width:100%; margin-top:18px; padding:14px; border-radius:12px; border:1px dashed var(--accent); background:transparent; color:var(--accent); font-size:16px; font-weight:600; cursor:pointer; }
+  .answer { display:none; margin-top:16px; }
+  .card.open .answer { display:block; animation:fade .25s ease; }
+  .card.open .reveal { display:none; }
+  @keyframes fade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+  .label { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:14px 0 6px; font-weight:600; }
+  .label:first-child { margin-top:0; }
+  pre { margin:0; white-space:pre-wrap; word-break:break-word; background:var(--code); border:1px solid var(--line); border-radius:10px; padding:12px; font:14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .why { margin:0; color:var(--text); font-size:15px; }
+  .source { margin-top:16px; padding-top:12px; border-top:1px solid var(--line); font-size:13px; color:var(--muted); }
+  .source a { color:var(--accent); text-decoration:none; word-break:break-word; }
+  .source div + div { margin-top:4px; }
+
+  .done { text-align:center; padding:48px 16px; }
+  .done button { margin-top:16px; }
+
+  footer { position:fixed; left:0; right:0; bottom:0; z-index:5; background:var(--bg); border-top:1px solid var(--line); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); }
+  .grade { display:flex; gap:10px; max-width:760px; margin:0 auto; }
+  .grade button, .done button { flex:1; padding:15px; border-radius:12px; font-size:16px; font-weight:650; cursor:pointer; border:0; }
+  .again { background:rgba(248,113,113,.15); color:var(--bad); border:1px solid var(--bad) !important; }
+  .good { background:var(--ok); color:#04210f; }
+  .done button { background:var(--accent); color:#04121f; flex:none; padding:12px 22px; }
+  .grade button:disabled { opacity:.35; }
+  .tools { display:flex; justify-content:center; gap:16px; margin-top:14px; font-size:13px; }
+  .tools button { background:none; border:0; color:var(--muted); text-decoration:underline; cursor:pointer; font-size:13px; }
+  .keys { display:none; text-align:center; color:var(--muted); font-size:12px; margin-top:10px; }
+  @media (hover:hover) and (min-width:700px) { .keys { display:block; } .q { font-size:22px; } .card { padding:24px; } }
 </style>
 </head>
 <body>
-<h1>AD0-E726 Front-End Professional</h1>
-<div class="bar">
-  <select id="section">
-    <option value="all">All sections</option>
-    <option value="1">1 Theme management (16%)</option>
-    <option value="2">2 Layout XML &amp; templates (23%)</option>
-    <option value="3">3 Styles (19%)</option>
-    <option value="4">4 JavaScript (20%)</option>
-    <option value="5">5 Admin configuration (12%)</option>
-    <option value="6">6 CLI (10%)</option>
-  </select>
-  <button id="onlyHard">Only cards I missed</button>
-  <button id="reset">Reset progress</button>
-</div>
-<div class="stats" id="stats"></div>
-<div class="progress"><div id="bar"></div></div>
-<div id="stage"></div>
-<div class="keys">Space = flip · 1 = again · 2 = got it</div>
+<header>
+  <div class="top">
+    <h1>AD0-E726 Front-End</h1>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+  <div class="chips" id="chips"></div>
+</header>
+
+<main>
+  <div id="stage"></div>
+  <div class="tools"><button id="shuffle">Shuffle</button><button id="reset">Reset progress</button></div>
+  <div class="keys">Space = show answer · 1 = again · 2 = got it</div>
+</main>
+
+<footer>
+  <div class="grade">
+    <button class="again" id="btnAgain" disabled>Again</button>
+    <button class="good" id="btnGood" disabled>Got it</button>
+  </div>
+</footer>
 
 <script>
+const FE = 'https://developer.adobe.com/commerce/frontend-core/';
+const EL = 'https://experienceleague.adobe.com/en/docs/';
+const ELO = EL + 'commerce-operations/configuration-guide/';
+const ELA = EL + 'commerce-admin/';
+
+const SRC = {
+  create:    ['Frontend Developer Guide › Create a storefront theme', FE + 'guide/themes/create-storefront'],
+  structure: ['Frontend Developer Guide › Theme structure', FE + 'guide/themes/structure'],
+  inherit:   ['Frontend Developer Guide › Theme inheritance', FE + 'guide/themes/inheritance'],
+  configure: ['Frontend Developer Guide › Configure theme properties', FE + 'guide/themes/configure'],
+  dict:      ['Frontend Developer Guide › Use a dictionary to customize strings', FE + 'guide/translations/dictionary'],
+  strings:   ['Frontend Developer Guide › Theme strings', FE + 'guide/translations/theory'],
+  ltypes:    ['Frontend Developer Guide › Layout file types', FE + 'guide/layouts/types'],
+  linstr:    ['Frontend Developer Guide › Layout instructions', FE + 'guide/layouts/xml-instructions'],
+  ltasks:    ['Frontend Developer Guide › Common layout customization tasks', FE + 'guide/layouts/xml-manage'],
+  lextend:   ['Frontend Developer Guide › Extend a layout', FE + 'guide/layouts/extend'],
+  loverride: ['Frontend Developer Guide › Override a layout', FE + 'guide/layouts/override'],
+  lcreate:   ['Frontend Developer Guide › Create a new layout', FE + 'guide/layouts/create'],
+  tbasic:    ['Frontend Developer Guide › Templates basic concepts', FE + 'guide/templates/override'],
+  email:     ['Frontend Developer Guide › Email templates', FE + 'guide/templates/email'],
+  xss:       ['PHP Developer Guide › Cross-site scripting (XSS)', 'https://developer.adobe.com/commerce/php/development/security/cross-site-scripting'],
+  cstyles:   ['Frontend Developer Guide › Customize theme styles', FE + 'guide/css/quickstart/customize-styles'],
+  cmode:     ['Frontend Developer Guide › Compilation mode', FE + 'guide/css/quickstart/compilation-mode'],
+  cpre:      ['Frontend Developer Guide › CSS and LESS preprocessing', FE + 'guide/css/preprocess'],
+  cui:       ['Frontend Developer Guide › UI library', FE + 'guide/css/ui-library'],
+  cinc:      ['Frontend Developer Guide › Include CSS', FE + 'guide/css/themes'],
+  grunt:     ['Frontend Developer Guide › Compile LESS with Grunt', FE + 'guide/css/debug'],
+  rjs:       ['JavaScript Developer Guide › RequireJS in Commerce', FE + 'javascript/requirejs'],
+  mixins:    ['JavaScript Developer Guide › JavaScript mixins', FE + 'javascript/mixins'],
+  init:      ['JavaScript Developer Guide › Call and initialize JavaScript', FE + 'javascript/init'],
+  custom:    ['JavaScript Developer Guide › Custom JavaScript', FE + 'javascript/custom'],
+  widgets:   ['JavaScript Developer Guide › jQuery widgets', FE + 'javascript/jquery-widgets/'],
+  kob:       ['UI Components Guide › Custom Knockout.js bindings', FE + 'ui-components/concepts/knockout-bindings'],
+  bsyn:      ['UI Components Guide › Binding syntax', FE + 'ui-components/concepts/binding-syntax'],
+  scd:       ['Configuration Guide › Static view file deployment', ELO + 'cli/static-view/static-view-file-deployment'],
+  cache:     ['Configuration Guide › Manage the cache', ELO + 'cli/manage-cache'],
+  modes:     ['Configuration Guide › Application modes', ELO + 'setup/application-modes'],
+  setmode:   ['Configuration Guide › Set the mode', ELO + 'cli/set-mode'],
+  dconf:     ['Admin Guide › Design configuration', ELA + 'content-design/design/configuration'],
+  themes:    ['Admin Guide › Themes', ELA + 'content-design/design/themes/themes'],
+  sched:     ['Admin Guide › Schedule design changes', ELA + 'content-design/design/themes/schedule'],
+  catdesign: ['Admin Guide › Categories – Design settings', ELA + 'catalog/categories/create/categories-custom-design'],
+  proddesign:['Admin Guide › Products – Design settings', ELA + 'catalog/products/settings/settings-advanced-design'],
+  pageadd:   ['Admin Guide › Add a new page', ELA + 'content-design/elements/pages/page-add'],
+  emailadmin:['Admin Guide › Customize email templates', ELA + 'systems/communications/email-template-custom'],
+  cloudvars: ['Commerce on Cloud › Build variables', EL + 'commerce-cloud-service/user-guide/configure/env/stage/variables-build'],
+  cloudcli:  ['Commerce on Cloud › Cloud CLI overview', EL + 'commerce-cloud-service/user-guide/dev-tools/cloud-cli/cloud-cli-overview'],
+  ece:       ['Commerce on Cloud › ece-tools package', EL + 'commerce-cloud-service/user-guide/dev-tools/ece-tools/package-overview'],
+};
+const SAMPLE_URL = 'https://www.edusum.com/adobe/adobe-commerce-front-end-developer-professional-ad0-e726-certification-sample-questions';
+
+const SECTIONS = {
+  1: 'Theme management (16%)',
+  2: 'Layout XML & templates (23%)',
+  3: 'Styles (19%)',
+  4: 'JavaScript (20%)',
+  5: 'Admin configuration (12.4%)',
+  6: 'CLI (9.6%)',
+};
+
+// s = exam section, q, a, why, src = [source key, doc section heading], sample = also asked in the sample questions
 const CARDS = [
   // Section 1
-  [1, "Where do you create a new storefront theme?", "app/design/frontend/<Vendor>/<theme>"],
-  [1, "Which TWO files are required to create a theme?", "theme.xml\nregistration.php\n\n(NOT composer.json, NOT etc/view.xml)"],
-  [1, "What goes in theme.xml?", "<title>My Theme</title>\n<parent>Magento/luma</parent>\n<media><preview_image>media/preview.jpg</preview_image></media>"],
-  [1, "registration.php for a theme?", "ComponentRegistrar::register(\n  ComponentRegistrar::THEME,\n  'frontend/Vendor/theme',\n  __DIR__\n);"],
-  [1, "A theme with no <parent> in theme.xml is…?", "A top-level theme (like Magento/blank). Luma's parent is Magento/blank."],
-  [1, "Extend Magento_Theme's 1column page layout in a theme — path?", "<theme>/Magento_Theme/page_layout/1column.xml"],
-  [1, "Override Magento_Catalog's view/frontend/templates/product/list.phtml in a theme?", "<theme>/Magento_Catalog/templates/product/list.phtml\n\n(drop 'view/frontend' from the path)"],
-  [1, "Override Magento_Checkout's view/frontend/web/template/summary.html in a theme?", "<theme>/Magento_Checkout/web/template/summary.html"],
-  [1, "Template fallback order?", "child theme → parent theme → module view/frontend → module view/base"],
-  [1, "Where are product image sizes configured?", "<theme>/etc/view.xml\n<images module=\"Magento_Catalog\">\n  <image id=\"category_page_grid\" type=\"small_image\">\n    <width>240</width><height>300</height>"],
-  [1, "Command to regenerate resized product images?", "bin/magento catalog:images:resize"],
-  [1, "Where does a theme keep its translations?", "<theme>/i18n/<locale>.csv  e.g. i18n/en_US.csv\nFormat: \"Original\",\"Translated\""],
-  [1, "Translation priority, lowest → highest?", "module i18n → language package → parent theme → child theme → database (inline translation)"],
-  [1, "Two strings compete: parent theme vs child theme csv. Who wins?", "Child theme. And DB (inline) translations beat both."],
-  [1, "How do you mark a string translatable in phtml / layout XML / email?", "phtml: __('Text')\nlayout: <argument ... translate=\"true\">\nemail: {{trans \"Text\"}}"],
-  [1, "Where to enable inline translation?", "Stores > Configuration > Advanced > Developer > Translate Inline\n(Developer tab visible only in developer mode)"],
+  {s:1, sample:true, q:"Where do you create a new storefront theme?", a:"app/design/frontend/<Vendor>/<theme>",
+   why:"Themes live in app/design. pub/static is generated output and vendor/ is for Composer packages, so both are wrong answers.", src:['create','Create a theme directory']},
+  {s:1, sample:true, q:"Which TWO files are required to create a theme?", a:"theme.xml\nregistration.php\n\n(NOT composer.json, NOT etc/view.xml)",
+   why:"theme.xml declares the theme and registration.php registers it. composer.json is only needed to distribute it as a package; view.xml is optional.", src:['create','Declare your theme / Add registration.php']},
+  {s:1, q:"What goes in theme.xml?", a:"<title>My Theme</title>\n<parent>Magento/luma</parent>\n<media><preview_image>media/preview.jpg</preview_image></media>",
+   why:"Only the title is mandatory. <parent> turns on inheritance; the preview image is shown in the admin.", src:['create','Declare your theme']},
+  {s:1, q:"registration.php for a theme?", a:"ComponentRegistrar::register(\n  ComponentRegistrar::THEME,\n  'frontend/Vendor/theme',\n  __DIR__\n);",
+   why:"Same registrar as modules, but with the THEME type and an area-prefixed name (frontend/…).", src:['create','Add registration.php']},
+  {s:1, q:"A theme with no <parent> in theme.xml is…?", a:"A top-level theme (like Magento/blank). Luma's parent is Magento/blank.",
+   why:"Without a parent there is no fallback to another theme, only to module and library files.", src:['inherit','Set a parent theme']},
+  {s:1, q:"Extend Magento_Theme's 1column page layout in a theme — path?", a:"<theme>/Magento_Theme/page_layout/1column.xml",
+   why:"Theme paths mirror the module's view/frontend folder without the 'view/frontend' part.", src:['lextend','Extend a layout']},
+  {s:1, q:"Override Magento_Catalog's view/frontend/templates/product/list.phtml in a theme?", a:"<theme>/Magento_Catalog/templates/product/list.phtml\n\n(drop 'view/frontend' from the path)",
+   why:"Template fallback checks the theme's <Vendor_Module>/templates folder before the module.", src:['tbasic','Template overrides']},
+  {s:1, sample:true, q:"Override Magento_Checkout's view/frontend/web/template/summary.html in a theme?", a:"<theme>/Magento_Checkout/web/template/summary.html",
+   why:"Knockout .html templates are static files, so they live under web/ — keep the same 'web/template' path inside the theme.", src:['inherit','Override static assets']},
+  {s:1, q:"Template fallback order?", a:"child theme → parent theme → module view/frontend → module view/base",
+   why:"Magento uses the first match it finds, so the closest theme wins.", src:['inherit','Override templates']},
+  {s:1, q:"Where are product image sizes configured?", a:"<theme>/etc/view.xml\n<images module=\"Magento_Catalog\">\n  <image id=\"category_page_grid\" type=\"small_image\">\n    <width>240</width><height>300</height>",
+   why:"view.xml holds theme-level image and gallery settings; the image id is what templates ask for.", src:['configure','Configure image properties']},
+  {s:1, q:"Command to regenerate resized product images?", a:"bin/magento catalog:images:resize",
+   why:"After changing sizes in view.xml, existing cached images keep the old size until regenerated.", src:['configure','Resize catalog images']},
+  {s:1, q:"Where does a theme keep its translations?", a:"<theme>/i18n/<locale>.csv  e.g. i18n/en_US.csv\nFormat: \"Original\",\"Translated\"",
+   why:"en_US.csv works too — it's how you rename default English strings.", src:['dict','Override parent strings for default locale']},
+  {s:1, q:"Translation priority, lowest → highest?", a:"module i18n → language package → parent theme → child theme → database (inline translation)",
+   why:"The docs: module translations have the lowest priority and the database the highest.", src:['dict','How the application applies locales']},
+  {s:1, q:"Two strings compete: parent theme vs child theme csv. Who wins?", a:"Child theme. And DB (inline) translations beat both.",
+   why:"Docs: \"child theme translations have priority over parent theme translations.\"", src:['dict','How the application applies locales']},
+  {s:1, q:"How do you mark a string translatable in phtml / layout XML / email?", a:"phtml: __('Text')\nlayout: <argument ... translate=\"true\">\nemail: {{trans \"Text\"}}",
+   why:"Each file type has its own syntax; the phrase collector finds all three.", src:['strings','Theme strings']},
+  {s:1, q:"Where to enable inline translation?", a:"Stores > Configuration > Advanced > Developer > Translate Inline\n(Developer tab visible only in developer mode)",
+   why:"Inline translations are saved to the database — the highest translation priority.", src:['dict','How the application applies locales']},
 
   // Section 2
-  [2, "Correct XML to remove a block?", "<referenceBlock name=\"block.name\" remove=\"true\"/>\n\nTraps: <remove element=\"\"/>, action=\"remove\" — don't exist"],
-  [2, "remove=\"true\" vs display=\"false\"?", "remove: element + children deleted from the layout\ndisplay=\"false\": not rendered, but still exists (can be moved/referenced)"],
-  [2, "Move a block into another container, as the first child?", "<move element=\"x\" destination=\"y\" before=\"-\"/>"],
-  [2, "before=\"-\" / after=\"-\" mean?", "before=\"-\" = first in parent\nafter=\"-\" = last in parent"],
-  [2, "What does <remove src=\"...\"/> do?", "Removes a static asset (css/js) added in <head>. Only for head assets, not blocks."],
-  [2, "Include another handle in a layout file?", "<update handle=\"customer_account\"/>"],
-  [2, "Extend Magento_Customer/view/frontend/layout/customer_account.xml in a theme?", "<theme>/Magento_Customer/layout/customer_account.xml\n(merged with the original)"],
-  [2, "OVERRIDE (replace) a module's layout file in a theme?", "<theme>/Magento_Customer/layout/override/base/customer_account.xml"],
-  [2, "Override a PARENT THEME's layout file?", "<theme>/Magento_Customer/layout/override/theme/Magento/luma/customer_account.xml"],
-  [2, "Extend vs override layout — which is preferred?", "Extend (merge). Overriding replaces the whole file and breaks on upgrades."],
-  [2, "Name the frontend page layouts.", "empty, 1column, 2columns-left, 2columns-right, 3columns"],
-  [2, "Add a custom page layout in a theme — which files?", "<theme>/Magento_Theme/page_layout/my-layout.xml\n<theme>/Magento_Theme/layouts.xml  (declares it so admin shows it)"],
-  [2, "Page layout vs page configuration file?", "Page layout (page_layout/): containers only, the skeleton\nPage configuration (layout/): <page> with <head> and <body>, blocks"],
-  [2, "Generic layout file?", "Root <layout>, no head/body. Used for AJAX/partial responses."],
-  [2, "Handle for the product page? For one specific product?", "catalog_product_view (route_controller_action)\ncatalog_product_view_id_42, _type_simple, _sku_<sku>"],
-  [2, "Handle loaded on every page?", "default"],
-  [2, "Container vs block?", "Container: only wraps children (htmlTag, htmlClass, htmlId); empty = not rendered.\nBlock: has a class + template, renders content."],
-  [2, "What does cacheable=\"false\" on a block do?", "Makes the WHOLE page uncacheable by full page cache. Avoid."],
-  [2, "Pass data to a block from layout XML?", "<arguments>\n  <argument name=\"title\" xsi:type=\"string\" translate=\"true\">Hi</argument>\n</arguments>\nRead: $block->getData('title') / $block->getTitle()"],
-  [2, "Argument xsi:type values?", "string, boolean, number, null, array, object, url, options, helper, const"],
-  [2, "Pass a view model to a template?", "<argument name=\"view_model\" xsi:type=\"object\">Vendor\\Module\\ViewModel\\X</argument>\nClass implements ArgumentInterface"],
-  [2, "Change a block's template in layout?", "<referenceBlock name=\"x\" template=\"Vendor_Module::new.phtml\"/>"],
-  [2, "Which escaper for text inside an HTML element?", "$escaper->escapeHtml($value)\n(optionally allowed tags: escapeHtml($v, ['b','a']))"],
-  [2, "Which escaper for an HTML attribute?", "$escaper->escapeHtmlAttr($value)"],
-  [2, "Which escaper for href/src?", "$escaper->escapeUrl($url)"],
-  [2, "Which escaper inside inline JavaScript?", "$escaper->escapeJs($value)"],
-  [2, "Mark intentional raw output in phtml?", "/* @noEscape */ $block->getChildHtml()\n($block->escape*() is deprecated → use $escaper)"],
-  [2, "Enable template hints?", "bin/magento dev:template-hints:enable"],
+  {s:2, sample:true, q:"Correct XML to remove a block?", a:"<referenceBlock name=\"block.name\" remove=\"true\"/>\n\nTraps: <remove element=\"\"/>, action=\"remove\" — don't exist",
+   why:"Blocks and containers are removed with the remove attribute; the <remove> element is only for head assets.", src:['linstr','referenceBlock and referenceContainer']},
+  {s:2, q:"remove=\"true\" vs display=\"false\"?", a:"remove: element + children deleted from the layout\ndisplay=\"false\": not rendered, but still exists (can be moved/referenced)",
+   why:"Docs: display=false prevents displaying, but the PHP classes are still loaded.", src:['linstr','block / referenceBlock']},
+  {s:2, q:"Move a block into another container, as the first child?", a:"<move element=\"x\" destination=\"y\" before=\"-\"/>",
+   why:"move keeps the element and its children; before/after set the position in the new parent.", src:['linstr','move']},
+  {s:2, q:"before=\"-\" / after=\"-\" mean?", a:"before=\"-\" = first in parent\nafter=\"-\" = last in parent",
+   why:"A dash means 'all siblings' instead of naming one.", src:['linstr','before and after attributes']},
+  {s:2, q:"What does <remove src=\"...\"/> do?", a:"Removes a static asset (css/js) added in <head>. Only for head assets, not blocks.",
+   why:"Docs: <remove> is used only to remove static resources linked in the page <head>.", src:['linstr','remove']},
+  {s:2, q:"Include another handle in a layout file?", a:"<update handle=\"customer_account\"/>",
+   why:"Pulls in all instructions of that handle, like an include.", src:['linstr','update']},
+  {s:2, sample:true, q:"Extend Magento_Customer/view/frontend/layout/customer_account.xml in a theme?", a:"<theme>/Magento_Customer/layout/customer_account.xml\n(merged with the original)",
+   why:"A same-named file in the theme is merged on top of the module's, so you only add changes.", src:['lextend','Extend a layout']},
+  {s:2, q:"OVERRIDE (replace) a module's layout file in a theme?", a:"<theme>/Magento_Customer/layout/override/base/customer_account.xml",
+   why:"'override/base' replaces the module's file completely instead of merging.", src:['loverride','Override base layouts']},
+  {s:2, q:"Override a PARENT THEME's layout file?", a:"<theme>/Magento_Customer/layout/override/theme/Magento/luma/customer_account.xml",
+   why:"'override/theme/<Vendor>/<theme>' targets one specific parent theme's file.", src:['loverride','Override theme layouts']},
+  {s:2, q:"Extend vs override layout — which is preferred?", a:"Extend (merge). Overriding replaces the whole file and breaks on upgrades.",
+   why:"The docs list overriding as a last resort; extending keeps upstream changes.", src:['loverride','Customization mistakes']},
+  {s:2, q:"Name the frontend page layouts.", a:"empty, 1column, 2columns-left, 2columns-right, 3columns",
+   why:"empty is in Magento_Theme view/base; the others in view/frontend/page_layout.", src:['ltypes','Page layout']},
+  {s:2, q:"Add a custom page layout in a theme — which files?", a:"<theme>/Magento_Theme/page_layout/my-layout.xml\n<theme>/Magento_Theme/layouts.xml  (declares it so admin shows it)",
+   why:"Without the layouts.xml entry the layout works but doesn't appear in admin dropdowns.", src:['lcreate','Add the layout to the layouts.xml file']},
+  {s:2, q:"Page layout vs page configuration file?", a:"Page layout (page_layout/): containers only, the skeleton\nPage configuration (layout/): <page> with <head> and <body>, blocks",
+   why:"Page layouts define structure; page configurations fill it with content.", src:['ltypes','Page layout / Page configuration']},
+  {s:2, q:"Generic layout file?", a:"Root <layout>, no head/body. Used for AJAX/partial responses.",
+   why:"Used when the response is an HTML fragment, not a full page.", src:['ltypes','Generic layout']},
+  {s:2, q:"Handle for the product page? For one specific product?", a:"catalog_product_view (route_controller_action)\ncatalog_product_view_id_42, _type_simple, _sku_<sku>",
+   why:"Page-type handles follow route_controller_action; page-specific handles add an id/type suffix.", src:['ltypes','Page configuration']},
+  {s:2, q:"Handle loaded on every page?", a:"default",
+   why:"default.xml is where site-wide header/footer changes go.", src:['ltasks','Common customization tasks']},
+  {s:2, q:"Container vs block?", a:"Container: only wraps children (htmlTag, htmlClass, htmlId); empty = not rendered.\nBlock: has a class + template, renders content.",
+   why:"Docs: an empty container with no child blocks is not rendered.", src:['linstr','block vs. container']},
+  {s:2, q:"What does cacheable=\"false\" on a block do?", a:"Makes the WHOLE page uncacheable by full page cache. Avoid.",
+   why:"One uncacheable block disables FPC for every page that uses that layout.", src:['linstr','block']},
+  {s:2, q:"Pass data to a block from layout XML?", a:"<arguments>\n  <argument name=\"title\" xsi:type=\"string\" translate=\"true\">Hi</argument>\n</arguments>\nRead: $block->getData('title') / $block->getTitle()",
+   why:"Arguments become block data, readable by the magic getter.", src:['linstr','argument']},
+  {s:2, q:"Argument xsi:type values?", a:"string, boolean, number, null, array, object, url, options, helper, const",
+   why:"The type decides how the value is interpreted (object = class instance).", src:['linstr','argument']},
+  {s:2, q:"Pass a view model to a template?", a:"<argument name=\"view_model\" xsi:type=\"object\">Vendor\\Module\\ViewModel\\X</argument>\nClass implements ArgumentInterface",
+   why:"View models keep logic out of templates without a custom block class.", src:['tbasic','Getting argument values from layout']},
+  {s:2, q:"Change a block's template in layout?", a:"<referenceBlock name=\"x\" template=\"Vendor_Module::new.phtml\"/>",
+   why:"The template attribute on referenceBlock swaps the template file.", src:['ltasks','Set the template used by a block']},
+  {s:2, q:"Which escaper for text inside an HTML element?", a:"$escaper->escapeHtml($value)\n(optionally allowed tags: escapeHtml($v, ['b','a']))",
+   why:"Escape for the context where the value is printed.", src:['xss','Output Processing › PHTML templates']},
+  {s:2, q:"Which escaper for an HTML attribute?", a:"$escaper->escapeHtmlAttr($value)",
+   why:"Attributes need quotes escaped too, which escapeHtml alone doesn't guarantee.", src:['xss','Output Processing › PHTML templates']},
+  {s:2, q:"Which escaper for href/src?", a:"$escaper->escapeUrl($url)",
+   why:"Blocks javascript: and other unsafe URL schemes.", src:['xss','Output Processing › PHTML templates']},
+  {s:2, q:"Which escaper inside inline JavaScript?", a:"$escaper->escapeJs($value)",
+   why:"JavaScript strings need different escaping than HTML.", src:['xss','Output Processing › PHTML templates']},
+  {s:2, q:"Mark intentional raw output in phtml?", a:"/* @noEscape */ $block->getChildHtml()\n($block->escape*() is deprecated → use $escaper)",
+   why:"The static test flags unescaped output unless it's annotated.", src:['xss','Static Test']},
+  {s:2, q:"Enable template hints?", a:"bin/magento dev:template-hints:enable",
+   why:"Shows which template renders each block — handy for finding what to override.", src:['tbasic','Template location']},
 
   // Section 3
-  [3, "Compiled vs partial LESS file — how to tell?", "No underscore = root, compiled to CSS (styles-m.less)\nUnderscore = partial, only imported (_module.less)"],
-  [3, "styles-m.less vs styles-l.less?", "styles-m: mobile + common styles (all widths)\nstyles-l: desktop (min-width 768px)"],
-  [3, "Easiest way to ADD styles on top of the parent theme?", "<theme>/web/css/source/_extend.less"],
-  [3, "What happens if a child theme creates _theme.less?", "It REPLACES the parent's _theme.less — copy Luma's content first or its variables are lost."],
-  [3, "Change only theme variables (e.g. primary color)?", "<theme>/web/css/source/_theme.less (or _variables.less)\n@primary__color: #c00;"],
-  [3, "Replace a module's styles completely in a theme?", "<theme>/Magento_Catalog/web/css/source/_module.less"],
-  [3, "Extend a module's styles without replacing them?", "<theme>/Magento_Catalog/web/css/source/_extend.less\n(collected by //@magento_import)"],
-  [3, "What does //@magento_import do?", "Magento directive: imports a file with that name from ALL modules/themes via fallback.\nLeading // hides it from the plain LESS compiler."],
-  [3, "Where is the Magento UI library?", "lib/web/css/source/lib/  (mixins like .lib-button(), .lib-font-face(), .lib-css())"],
-  [3, "Write styles for ALL screen sizes (UI library pattern)?", "& when (@media-common = true) { ... }"],
-  [3, "Write desktop-only styles?", ".media-width(@extremum, @break) when (@extremum = 'min') and (@break = @screen__m) { ... }"],
-  [3, "Mobile/desktop breakpoint variable?", "@screen__m = 768px"],
-  [3, "Two LESS compilation modes and where to switch?", "Server-side (default, PHP) / client-side (less.js in browser)\nStores > Config > Advanced > Developer > Frontend Development Workflow"],
-  [3, "Grunt themes config file?", "dev/tools/grunt/configs/themes.js (copy to local-themes.js)\ngrunt clean / exec / less / watch"],
-  [3, "Edited LESS but no change on the page (server-side). What to delete?", "pub/static/frontend/<Vendor>/<theme>\nvar/view_preprocessed"],
-  [3, "Add a custom CSS file to every page?", "<theme>/web/css/custom.less\ndefault_head_blocks.xml: <css src=\"css/custom.css\"/>\n(Magento compiles the .less with the same name)"],
-  [3, "Production CSS settings location?", "Stores > Config > Advanced > Developer > CSS Settings\n(merge, minify, critical path)"],
+  {s:3, q:"Compiled vs partial LESS file — how to tell?", a:"No underscore = root, compiled to CSS (styles-m.less)\nUnderscore = partial, only imported (_module.less)",
+   why:"Root source files are what layout references as .css.", src:['cpre','Terms used › Root source files']},
+  {s:3, q:"styles-m.less vs styles-l.less?", a:"styles-m: mobile + common styles (all widths)\nstyles-l: desktop (min-width 768px)",
+   why:"Mobile-first: everyone loads styles-m, desktop also loads styles-l.", src:['cinc','How stylesheet files are organized']},
+  {s:3, q:"Easiest way to ADD styles on top of the parent theme?", a:"<theme>/web/css/source/_extend.less",
+   why:"Docs: the simplest option when you're happy with the parent and just want more styles.", src:['cstyles','Extend parent styles']},
+  {s:3, q:"What happens if a child theme creates _theme.less?", a:"It REPLACES the parent's _theme.less — copy Luma's content first or its variables are lost.",
+   why:"Docs: \"your _theme.less overrides the parent _theme.less\" — copy all variables you need.", src:['cstyles','Override parent styles']},
+  {s:3, q:"Change only theme variables (e.g. primary color)?", a:"<theme>/web/css/source/_theme.less (or _variables.less)\n@primary__color: #c00;",
+   why:"Variables are overridden, not extended, so they go in _theme.less.", src:['cstyles','Override parent styles']},
+  {s:3, q:"_extend.less vs _theme.less — which wins on conflict?", a:"_extend.less always takes precedence over _theme.less.",
+   why:"Docs note: rules and variables in _extend.less override those in _theme.less.", src:['cstyles','Extend parent styles']},
+  {s:3, q:"Replace a module's styles completely in a theme?", a:"<theme>/Magento_Catalog/web/css/source/_module.less",
+   why:"Same name in the theme replaces the module's file via fallback.", src:['cstyles','Override module styles']},
+  {s:3, q:"Extend a module's styles without replacing them?", a:"<theme>/Magento_Catalog/web/css/source/_extend.less\n(collected by //@magento_import)",
+   why:"Module-level _extend.less files are gathered by @magento_import.", src:['cstyles','Extend module styles']},
+  {s:3, q:"What does //@magento_import do?", a:"Magento directive: imports a file with that name from ALL modules/themes via fallback.\nLeading // hides it from the plain LESS compiler.",
+   why:"Lets one root file pick up every module's _module.less without listing them.", src:['cpre','@magento_import directive']},
+  {s:3, q:"Where is the Magento UI library?", a:"lib/web/css/source/lib/  (mixins like .lib-button(), .lib-font-face(), .lib-css())",
+   why:"Blank and Luma are built from these mixins and variables.", src:['cui','Mixin location']},
+  {s:3, q:"Write styles for ALL screen sizes (UI library pattern)?", a:"& when (@media-common = true) { ... }",
+   why:"Common styles are output once, into styles-m.", src:['cui','UI library']},
+  {s:3, q:"Write desktop-only styles?", a:".media-width(@extremum, @break) when (@extremum = 'min') and (@break = @screen__m) { ... }",
+   why:"min-width rules from @screen__m up are compiled into styles-l.", src:['cui','UI library']},
+  {s:3, q:"Mobile/desktop breakpoint variable?", a:"@screen__m = 768px",
+   why:"The split between styles-m and styles-l.", src:['cui','Predefined variables']},
+  {s:3, q:"Two LESS compilation modes and where to switch?", a:"Server-side (default, PHP) / client-side (less.js in browser)\nStores > Config > Advanced > Developer > Frontend Development Workflow",
+   why:"Client-side compiles on every page load: slow, with a flash of unstyled text.", src:['cmode','Compilation mode']},
+  {s:3, q:"Grunt themes config file?", a:"dev/tools/grunt/configs/themes.js (copy to local-themes.js)\ngrunt clean / exec / less / watch",
+   why:"Grunt recompiles only what changed — fastest for theme work.", src:['grunt','Track changes using Grunt']},
+  {s:3, q:"Edited LESS but no change on the page (server-side). What to delete?", a:"pub/static/frontend/<Vendor>/<theme>\nvar/view_preprocessed",
+   why:"Old compiled CSS is reused until these are cleared.", src:['create','To clear the pub/static / var/view_preprocessed directory']},
+  {s:3, q:"Add a custom CSS file to every page?", a:"<theme>/web/css/custom.less\ndefault_head_blocks.xml: <css src=\"css/custom.css\"/>\n(Magento compiles the .less with the same name)",
+   why:"Layout references the .css; the preprocessor finds the .less of the same name.", src:['cinc','Include CSS']},
+  {s:3, q:"Production CSS settings location?", a:"Stores > Config > Advanced > Developer > CSS Settings\n(merge, minify, critical path)",
+   why:"Visible in developer mode; affects how CSS is delivered in production.", src:['cmode','Compilation mode']},
 
   // Section 4
-  [4, "Where can requirejs-config.js live?", "<module>/view/<area>/requirejs-config.js\n<theme>/requirejs-config.js\n<theme>/<Vendor_Module>/requirejs-config.js\n(all merged into one file)"],
-  [4, "RequireJS: replace a JS module everywhere with your own?", "map: { '*': { 'Magento_X/js/foo': 'Vendor_Module/js/foo' } }"],
-  [4, "RequireJS: load a non-AMD library that needs jQuery?", "paths: { slick: 'Vendor_Module/js/slick' },\nshim: { slick: { deps: ['jquery'] } }"],
-  [4, "RequireJS: load a script on every page?", "deps: ['Vendor_Module/js/file']"],
-  [4, "'Vendor_Module/js/foo' resolves to which file?", "Vendor/Module/view/frontend/web/js/foo.js"],
-  [4, "Two ways to init a JS component from a template?", "data-mage-init='{\"Vendor_Module/js/foo\": {\"opt\":1}}'\n<script type=\"text/x-magento-init\">{\"#el\": {\"Vendor_Module/js/foo\": {}}}<\/script>"],
-  [4, "x-magento-init with \"*\" as selector means?", "No element — component runs with config only."],
-  [4, "Declare a mixin?", "config: { mixins: {\n  'Magento_Checkout/js/view/minicart': {\n    'Vendor_Module/js/minicart-mixin': true\n  }\n} }\n(false disables it)"],
-  [4, "Which THREE scopes can declare mixins?", "view/frontend, view/base, view/adminhtml"],
-  [4, "Mixin for a UI component?", "return function (Target) {\n  return Target.extend({ method: function () { return this._super(); } });\n};"],
-  [4, "Mixin for a jQuery widget?", "return function (widget) {\n  $.widget('mage.name', widget, { ... });\n  return $.mage.name;\n};"],
-  [4, "Mixin for a plain function?", "mage/utils/wrapper:\nreturn wrapper.wrap(target, function (original, ...args) { ... });"],
-  [4, "TWO valid ways to translate 'Add to Quote' in JS?", "$.mage.__('Add to Quote')\ndefine(['mage/translate'], function ($t) { $t('Add to Quote'); })\n\nNOT: __() or trans()"],
-  [4, "Translate text in a Knockout template?", "data-bind=\"i18n: 'Text'\"\n<!-- ko i18n: 'Text' --><!-- /ko -->\n<translate args=\"'Text'\"/>"],
-  [4, "Where does the JS translation dictionary come from?", "js-translation.json, generated by static content deploy from i18n csv files"],
-  [4, "HTML attribute for Knockout bindings?", "data-bind"],
-  [4, "Where do Knockout .html templates go in a module?", "Vendor/Module/view/frontend/web/template/\n(NOT templates/, NOT web/js/template)"],
-  [4, "Set a UI component's template?", "Component.extend({ defaults: { template: 'Vendor_Module/name' } })\n→ web/template/name.html"],
-  [4, "Magento custom Knockout bindings (name 4)?", "scope, i18n, afterRender, mageInit (also collapsible, outerClick, fadeVisible)"],
-  [4, "Bind a DOM area to a UI component from jsLayout?", "<div data-bind=\"scope: 'componentName'\"> ... </div>"],
-  [4, "Knockout observable basics?", "ko.observable(1), ko.observableArray([]), ko.computed(fn)\nread: value()  write: value(5)"],
-  [4, "Define a jQuery widget?", "$.widget('mage.myWidget', {\n  options: {},\n  _create: function () {}\n});\nreturn $.mage.myWidget;"],
-  [4, "Extend an existing jQuery widget?", "$.widget('mage.myWidget', $.mage.collapsible, { ... this._super() ... })"],
-  [4, "Call a jQuery widget method?", "$('#el').myWidget('open');"],
-  [4, "_create vs _init in a widget?", "_create: once when the widget is created\n_init: every time the widget is called"],
-  [4, "Name core Magento jQuery widgets.", "collapsible, accordion, tabs, modal, dropdown, menu, loader, calendar"],
+  {s:4, q:"Where can requirejs-config.js live?", a:"<module>/view/<area>/requirejs-config.js\n<theme>/requirejs-config.js\n<theme>/<Vendor_Module>/requirejs-config.js\n(all merged into one file)",
+   why:"All configs are merged, so each module adds its own entries.", src:['rjs','Configuration']},
+  {s:4, q:"RequireJS: replace a JS module everywhere with your own?", a:"map: { '*': { 'Magento_X/js/foo': 'Vendor_Module/js/foo' } }",
+   why:"'*' applies the alias for every module that requires it.", src:['rjs','map']},
+  {s:4, q:"RequireJS: load a non-AMD library that needs jQuery?", a:"paths: { slick: 'Vendor_Module/js/slick' },\nshim: { slick: { deps: ['jquery'] } }",
+   why:"shim declares dependencies for scripts that don't use define().", src:['rjs','shim']},
+  {s:4, q:"RequireJS: load a script on every page?", a:"deps: ['Vendor_Module/js/file']",
+   why:"deps loads the listed modules as soon as RequireJS starts.", src:['rjs','deps']},
+  {s:4, q:"'Vendor_Module/js/foo' resolves to which file?", a:"Vendor/Module/view/frontend/web/js/foo.js",
+   why:"Module ids map to the module's web folder, with no .js extension.", src:['rjs','paths']},
+  {s:4, q:"Two ways to init a JS component from a template?", a:"data-mage-init='{\"Vendor_Module/js/foo\": {\"opt\":1}}'\n<script type=\"text/x-magento-init\">{\"#el\": {\"Vendor_Module/js/foo\": {}}}<\/script>",
+   why:"Both are declarative; the component gets (config, element).", src:['init','Declarative notation']},
+  {s:4, q:"x-magento-init with \"*\" as selector means?", a:"No element — component runs with config only.",
+   why:"Used for components that don't attach to a DOM node.", src:['init','Use the <script type="text/x-magento-init"> tag']},
+  {s:4, q:"Declare a mixin?", a:"config: { mixins: {\n  'Magento_Checkout/js/view/minicart': {\n    'Vendor_Module/js/minicart-mixin': true\n  }\n} }\n(false disables it)",
+   why:"Mixins are declared in requirejs-config.js under config.mixins.", src:['mixins','Declaring a mixin']},
+  {s:4, sample:true, q:"Which THREE scopes can declare mixins?", a:"view/frontend, view/base, view/adminhtml",
+   why:"Docs: scope depends on the folder under view — frontend, adminhtml, or base (both).", src:['mixins','Mixin scope']},
+  {s:4, q:"Mixin for a UI component?", a:"return function (Target) {\n  return Target.extend({ method: function () { return this._super(); } });\n};",
+   why:"extend() returns a subclass; _super() calls the original method.", src:['mixins','Extend UI component']},
+  {s:4, q:"Mixin for a jQuery widget?", a:"return function (widget) {\n  $.widget('mage.name', widget, { ... });\n  return $.mage.name;\n};",
+   why:"Redefining the widget with itself as the base keeps the original behaviour.", src:['mixins','Extend jQuery widget']},
+  {s:4, q:"Mixin for a plain function?", a:"mage/utils/wrapper:\nreturn wrapper.wrap(target, function (original, ...args) { ... });",
+   why:"wrapper passes the original function in as the first argument.", src:['mixins','Extend JS function']},
+  {s:4, sample:true, q:"TWO valid ways to translate 'Add to Quote' in JS?", a:"$.mage.__('Add to Quote')\ndefine(['mage/translate'], function ($t) { $t('Add to Quote'); })\n\nNOT: __() or trans()",
+   why:"Both come from the mage/translate library; __() is PHP only.", src:['strings','Strings added in .js files']},
+  {s:4, q:"Translate text in a Knockout template?", a:"data-bind=\"i18n: 'Text'\"\n<!-- ko i18n: 'Text' --><!-- /ko -->\n<translate args=\"'Text'\"/>",
+   why:"i18n is a Magento custom binding.", src:['strings','Strings added in UI component templates']},
+  {s:4, q:"Where does the JS translation dictionary come from?", a:"js-translation.json, generated by static content deploy from i18n csv files",
+   why:"Add phrases to the csv and redeploy, or JS shows the original text.", src:['strings','Strings added in .js files']},
+  {s:4, sample:true, q:"HTML attribute for Knockout bindings?", a:"data-bind",
+   why:"data-mage-init is for jQuery/JS components, not Knockout.", src:['bsyn','Knockout native syntax']},
+  {s:4, sample:true, q:"Where do Knockout .html templates go in a module?", a:"Vendor/Module/view/frontend/web/template/\n(NOT templates/, NOT web/js/template)",
+   why:"templates/ is for .phtml; KO templates are static files under web/template.", src:['inherit','Override static assets']},
+  {s:4, q:"Set a UI component's template?", a:"Component.extend({ defaults: { template: 'Vendor_Module/name' } })\n→ web/template/name.html",
+   why:"The id skips 'web/template' and the .html extension.", src:['custom','Extend a default Ui component']},
+  {s:4, q:"Magento custom Knockout bindings (name 4)?", a:"scope, i18n, afterRender, mageInit (also collapsible, outerClick, fadeVisible)",
+   why:"These are Magento additions, not native Knockout.", src:['kob','Custom bindings']},
+  {s:4, q:"Bind a DOM area to a UI component from jsLayout?", a:"<div data-bind=\"scope: 'componentName'\"> ... </div>",
+   why:"scope links the markup to a component in the registry.", src:['kob','Custom bindings']},
+  {s:4, q:"Knockout observable basics?", a:"ko.observable(1), ko.observableArray([]), ko.computed(fn)\nread: value()  write: value(5)",
+   why:"Observables are functions — call them to read or write.", src:['bsyn','Knockout native syntax']},
+  {s:4, q:"Define a jQuery widget?", a:"$.widget('mage.myWidget', {\n  options: {},\n  _create: function () {}\n});\nreturn $.mage.myWidget;",
+   why:"Magento widgets use the mage namespace.", src:['custom','Add a custom component']},
+  {s:4, q:"Extend an existing jQuery widget?", a:"$.widget('mage.myWidget', $.mage.collapsible, { ... this._super() ... })",
+   why:"Passing the base widget as 2nd argument inherits it.", src:['custom','Extend widget']},
+  {s:4, q:"Call a jQuery widget method?", a:"$('#el').myWidget('open');",
+   why:"jQuery UI calls methods by passing the name as a string.", src:['widgets','jQuery widgets']},
+  {s:4, q:"_create vs _init in a widget?", a:"_create: once when the widget is created\n_init: every time the widget is called",
+   why:"Setup goes in _create; re-runnable logic in _init.", src:['custom','Add a custom component']},
+  {s:4, q:"Name core Magento jQuery widgets.", a:"collapsible, accordion, tabs, modal, dropdown, menu, loader, calendar",
+   why:"Each is documented as its own widget page.", src:['widgets','jQuery widgets']},
 
   // Section 5
-  [5, "Apply a theme to a store view?", "Content > Design > Configuration → store view row → Edit → Applied Theme"],
-  [5, "What is a Design Rule (user agent exception)?", "Use a different theme for specific user agents (e.g. a mobile browser).\nContent > Design > Configuration"],
-  [5, "Schedule a theme for a date range?", "Content > Design > Schedule → Add Design Change (store, theme, from/to)"],
-  [5, "Change the store logo from admin?", "Content > Design > Configuration → store view → Header → Logo Image"],
-  [5, "Category design settings?", "Catalog > Categories > Design:\nUse Parent Category Settings, Theme, Layout, Custom Layout Update, Apply Design to Products\n+ Schedule Design Update"],
-  [5, "Product design settings?", "Catalog > Products > Design:\nLayout, Display Product Options In, Custom Layout Update\n+ Schedule Design Update"],
-  [5, "CMS page design settings?", "Content > Pages > Design: Layout, Custom Layout Update\nCustom Design Update: from/to, new theme, new layout"],
-  [5, "Custom Layout Update file name for one product?", "catalog_product_view_selectable_<sku>_<name>.xml\n(category: _<categoryId>_, cms: cms_page_view_selectable_<identifier>_<name>.xml)"],
-  [5, "Customize a transactional email in admin — steps?", "1. Marketing > Communications > Email Templates > Add New\n2. Load Default Template → edit → save\n3. Assign in Stores > Configuration (e.g. Sales > Sales Emails)"],
-  [5, "Customize a transactional email in a theme?", "<theme>/Magento_Sales/email/order_new.html\nHeader/footer: <theme>/Magento_Email/email/header.html, footer.html"],
-  [5, "Email template syntax: variable, translation, header include?", "{{var order.increment_id}}\n{{trans \"Text\"}}\n{{template config_path=\"design/email/header_template\"}}"],
-  [5, "Email styles files?", "web/css/email.less, email-inline.less, source/_email-extend.less"],
+  {s:5, q:"Apply a theme to a store view?", a:"Content > Design > Configuration → store view row → Edit → Applied Theme",
+   why:"Themes are applied per scope from the Design Configuration grid.", src:['dconf','Change the design configuration']},
+  {s:5, sample:true, q:"What is a Design Rule (user agent exception)?", a:"Use a different theme for specific user agents (e.g. a mobile browser).\nContent > Design > Configuration",
+   why:"Search strings are matched against the browser ID (regex allowed) to pick a theme.", src:['themes','Add a user agent rule']},
+  {s:5, q:"Schedule a theme for a date range?", a:"Content > Design > Schedule → Add Design Change (store, theme, from/to)",
+   why:"Used for seasonal themes that switch automatically.", src:['sched','Add a scheduled design change']},
+  {s:5, q:"Change the store logo from admin?", a:"Content > Design > Configuration → store view → Header → Logo Image",
+   why:"Same screen as Applied Theme, Header section.", src:['dconf','Design configuration']},
+  {s:5, q:"Category design settings?", a:"Catalog > Categories > Design:\nUse Parent Category Settings, Theme, Layout, Custom Layout Update, Apply Design to Products\n+ Schedule Design Update",
+   why:"Apply Design to Products pushes the category's design to its products.", src:['catdesign','Categories – Design settings']},
+  {s:5, q:"Product design settings?", a:"Catalog > Products > Design:\nLayout, Display Product Options In, Custom Layout Update\n+ Schedule Design Update",
+   why:"Display Product Options In = main content or block after info column.", src:['proddesign','Design']},
+  {s:5, q:"CMS page design settings?", a:"Content > Pages > Design: Layout, Custom Layout Update\nCustom Design Update: from/to, new theme, new layout",
+   why:"Pages can switch layout or theme for a date range.", src:['pageadd','Add a new page']},
+  {s:5, q:"Custom Layout Update file name for one product?", a:"catalog_product_view_selectable_<sku>_<name>.xml\n(category: _<categoryId>_, cms: cms_page_view_selectable_<identifier>_<name>.xml)",
+   why:"Free-text XML was removed for security; admins now pick a file from the theme.", src:['catdesign','Custom Layout Update']},
+  {s:5, q:"Customize a transactional email in admin — steps?", a:"1. Marketing > Communications > Email Templates > Add New\n2. Load Default Template → edit → save\n3. Assign in Stores > Configuration (e.g. Sales > Sales Emails)",
+   why:"A saved template does nothing until it's selected in configuration.", src:['emailadmin','Step 1 Load / Step 2 Customize / Step 3 Update the configuration']},
+  {s:5, q:"Customize a transactional email in a theme?", a:"<theme>/Magento_Sales/email/order_new.html\nHeader/footer: <theme>/Magento_Email/email/header.html, footer.html",
+   why:"Email templates live in <module>/view/<area>/email; themes override them like other files.", src:['email','Theme-based customizations']},
+  {s:5, q:"Email template syntax: variable, translation, header include?", a:"{{var order.increment_id}}\n{{trans \"Text\"}}\n{{template config_path=\"design/email/header_template\"}}",
+   why:"Every frontend email includes header and footer via these template directives.", src:['email','Customize header and footer templates']},
+  {s:5, q:"Email styles files?", a:"web/css/email.less, email-inline.less, source/_email-extend.less",
+   why:"Inline styles are inlined into the HTML because many mail clients ignore <style>.", src:['email','Styles for email templates']},
 
   // Section 6
-  [6, "Deploy static content for one theme?", "bin/magento setup:static-content:deploy -f en_US --theme Vendor/theme\n(-f needed outside production mode)"],
-  [6, "cache:clean vs cache:flush?", "clean: removes Magento cache types (safe)\nflush: wipes the whole cache storage"],
-  [6, "Switch to developer mode?", "bin/magento deploy:mode:set developer\n(show: deploy:mode:show)"],
-  [6, "Production vs developer mode for static files?", "Production: must run static-content:deploy, no on-demand generation\nDeveloper: generated on request"],
-  [6, "Publish LESS sources for Grunt / client-side compilation?", "bin/magento dev:source-theme:deploy --theme Vendor/theme css/styles-m css/styles-l"],
-  [6, "Changed a layout XML file — which caches?", "layout + full_page"],
-  [6, "Collect translatable phrases into a csv?", "bin/magento i18n:collect-phrases -o file.csv <path>"],
-  [6, "Commerce Cloud: CLI for environments/ssh/logs?", "magento-cloud CLI"],
-  [6, "Commerce Cloud: build/deploy tool and its config file?", "ece-tools\n.magento.env.yaml (SCD_STRATEGY, SCD_THREADS, SKIP_SCD, SCD_MATRIX)"],
-  [6, "Commerce Cloud: CDN / full page cache and monitoring?", "Fastly (CDN + FPC), New Relic (monitoring)"],
+  {s:6, q:"Deploy static content for one theme?", a:"bin/magento setup:static-content:deploy -f en_US --theme Vendor/theme\n(-f needed outside production mode)",
+   why:"Without -f the command refuses to run in developer/default mode.", src:['scd','Static view file deployment']},
+  {s:6, q:"cache:clean vs cache:flush?", a:"clean: removes Magento cache types (safe)\nflush: wipes the whole cache storage",
+   why:"flush can also remove other apps' data sharing the same storage.", src:['cache','Clean and flush cache types']},
+  {s:6, q:"Switch to developer mode?", a:"bin/magento deploy:mode:set developer\n(show: deploy:mode:show)",
+   why:"Developer mode shows errors and generates static files on demand.", src:['setmode','Set the mode']},
+  {s:6, q:"Production vs developer mode for static files?", a:"Production: must run static-content:deploy, no on-demand generation\nDeveloper: generated on request",
+   why:"Production serves only pre-deployed files for speed.", src:['modes','Application modes']},
+  {s:6, q:"Publish LESS sources for Grunt / client-side compilation?", a:"bin/magento dev:source-theme:deploy --theme Vendor/theme css/styles-m css/styles-l",
+   why:"Creates the symlinked sources in pub/static that Grunt or less.js compile.", src:['grunt','Track changes using Grunt']},
+  {s:6, q:"Changed a layout XML file — which caches?", a:"layout + full_page",
+   why:"Layout cache stores merged XML; full page cache stores rendered HTML.", src:['cache','Manage the cache']},
+  {s:6, q:"Collect translatable phrases into a csv?", a:"bin/magento i18n:collect-phrases -o file.csv <path>",
+   why:"Builds a dictionary to translate or override.", src:['dict','Create locale dictionaries']},
+  {s:6, q:"Commerce Cloud: CLI for environments/ssh/logs?", a:"magento-cloud CLI",
+   why:"Manages branches, environments, SSH and logs on Cloud.", src:['cloudcli','Cloud CLI overview']},
+  {s:6, q:"Commerce Cloud: build/deploy tool and its config file?", a:"ece-tools\n.magento.env.yaml (SCD_STRATEGY, SCD_THREADS, SKIP_SCD, SCD_MATRIX)",
+   why:"ece-tools runs build/deploy; .magento.env.yaml tunes static content deploy.", src:['cloudvars','Build variables']},
+  {s:6, q:"Commerce Cloud: CDN / full page cache and monitoring?", a:"Fastly (CDN + FPC), New Relic (monitoring)",
+   why:"Both are included with Commerce on Cloud.", src:['ece','ece-tools package']},
 ];
 
-const KEY = 'ad0e726-progress';
-let progress = JSON.parse(localStorage.getItem(KEY) || '{}'); // id -> 'good' | 'again'
-let queue = [], current = null, onlyHard = false;
+const KEY = 'ad0e726-progress-v2';
+let progress = JSON.parse(localStorage.getItem(KEY) || '{}');
+let filter = 'all', queue = [], current = null;
 
-function save() { localStorage.setItem(KEY, JSON.stringify(progress)); }
-function pool() {
-  const s = document.getElementById('section').value;
-  return CARDS.map((c, i) => ({ id: i, sec: c[0], q: c[1], a: c[2] }))
-    .filter(c => s === 'all' || String(c.sec) === s)
-    .filter(c => !onlyHard || progress[c.id] === 'again');
-}
-function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-function build() {
-  const p = pool();
-  queue = shuffle(p.filter(c => progress[c.id] !== 'good'));
-  if (!queue.length && !onlyHard) queue = [];
-  next();
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const save = () => localStorage.setItem(KEY, JSON.stringify(progress));
+const inFilter = (c, i) => filter === 'all' ? true : filter === 'missed' ? progress[i] === 'again' : String(c.s) === filter;
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function chips() {
+  const missed = CARDS.filter((c, i) => progress[i] === 'again').length;
+  const items = [['all', 'All'], ...Object.keys(SECTIONS).map(k => [k, 'S' + k + ' ' + SECTIONS[k].replace(/ \(.*/, '')]), ['missed', 'Missed (' + missed + ')']];
+  $('chips').innerHTML = items.map(([k, l]) => `<button class="chip${k === filter ? ' on' : ''}" data-k="${k}">${esc(l)}</button>`).join('');
+  $('chips').querySelectorAll('.chip').forEach(b => b.onclick = () => { filter = b.dataset.k; build(); });
 }
 function stats() {
-  const p = pool().length ? CARDS.map((c, i) => i).filter(i => {
-    const s = document.getElementById('section').value; return s === 'all' || String(CARDS[i][0]) === s;
-  }) : [];
-  const good = p.filter(i => progress[i] === 'good').length;
-  const again = p.filter(i => progress[i] === 'again').length;
-  document.getElementById('stats').textContent = `${good} known · ${again} missed · ${p.length - good} left in this set`;
-  document.getElementById('bar').style.width = p.length ? (good / p.length * 100) + '%' : '0';
+  const ids = CARDS.map((c, i) => i).filter(i => filter === 'missed' || filter === 'all' || String(CARDS[i].s) === filter);
+  const good = ids.filter(i => progress[i] === 'good').length;
+  $('stats').textContent = `${good}/${ids.length} known`;
+  $('bar').style.width = ids.length ? (good / ids.length * 100) + '%' : '0';
+}
+function build() {
+  const pool = CARDS.map((c, i) => i).filter(i => inFilter(CARDS[i], i));
+  queue = shuffle(filter === 'missed' ? pool : pool.filter(i => progress[i] !== 'good'));
+  chips(); next();
 }
 function next() {
   stats();
-  const stage = document.getElementById('stage');
   current = queue.shift();
-  if (!current) {
-    stage.innerHTML = `<div class="done">Done with this set 🎉<br><br><button onclick="resetSection()">Go through it again</button></div>`;
+  $('btnAgain').disabled = $('btnGood').disabled = true;
+  if (current === undefined) {
+    $('stage').innerHTML = `<div class="card done"><div style="font-size:40px">🎉</div><p>Nothing left in this set.</p><button id="again">Go through it again</button></div>`;
+    $('again').onclick = () => { CARDS.forEach((c, i) => { if (inFilter(c, i)) delete progress[i]; }); save(); build(); };
     return;
   }
-  stage.innerHTML = `
-    <div class="card" id="card" onclick="flip()">
-      <div class="inner">
-        <div class="face front"><span class="tag">Section ${current.sec}</span><div class="q"></div><span class="hint">click to flip</span></div>
-        <div class="face back"><span class="tag">Section ${current.sec}</span><div class="a"></div></div>
+  const c = CARDS[current];
+  const [title, url] = SRC[c.src[0]];
+  $('stage').innerHTML = `
+    <article class="card" id="card">
+      <div class="meta">
+        <span class="tag">S${c.s} · ${esc(SECTIONS[c.s].replace(/ \(.*/, ''))}</span>
+        ${c.sample ? '<span class="tag sample">Sample exam question</span>' : ''}
       </div>
-    </div>
-    <div class="grade"><button class="again" onclick="grade('again')">Again (1)</button><button class="good" onclick="grade('good')">Got it (2)</button></div>`;
-  stage.querySelector('.q').textContent = current.q;
-  stage.querySelector('.a').textContent = current.a;
+      <p class="q">${esc(c.q)}</p>
+      <button class="reveal" id="reveal">Show answer</button>
+      <div class="answer">
+        <div class="label">Answer</div>
+        <pre>${esc(c.a)}</pre>
+        <div class="label">Why</div>
+        <p class="why">${esc(c.why)}</p>
+        <div class="source">
+          <div>📘 Source: <a href="${url}" target="_blank" rel="noopener">${esc(title)}</a> › ${esc(c.src[1])}</div>
+          <div>🎯 Exam objective: Section ${c.s} — ${esc(SECTIONS[c.s])}</div>
+          ${c.sample ? `<div>📝 Also asked in the <a href="${SAMPLE_URL}" target="_blank" rel="noopener">AD0-E726 sample questions</a></div>` : ''}
+        </div>
+      </div>
+    </article>`;
+  $('reveal').onclick = reveal;
+  window.scrollTo({ top: 0 });
 }
-function flip() { document.getElementById('card')?.classList.toggle('flipped'); }
+function reveal() {
+  const card = $('card');
+  if (!card || card.classList.contains('open')) return;
+  card.classList.add('open');
+  $('btnAgain').disabled = $('btnGood').disabled = false;
+}
 function grade(g) {
-  if (!current) return;
-  progress[current.id] = g; save();
+  if (current === undefined || $('btnGood').disabled) return;
+  progress[current] = g; save();
   if (g === 'again') queue.splice(Math.min(3, queue.length), 0, current);
-  next();
+  if (filter === 'missed' && g === 'good') { /* drops out of the missed set */ }
+  chips(); next();
 }
-function resetSection() {
-  pool().forEach(c => delete progress[c.id]); save(); build();
-}
-document.getElementById('section').onchange = build;
-document.getElementById('onlyHard').onclick = e => {
-  onlyHard = !onlyHard;
-  e.target.textContent = onlyHard ? 'Show all cards' : 'Only cards I missed';
-  if (onlyHard) { queue = shuffle(pool()); next(); } else build();
-};
-document.getElementById('reset').onclick = () => { if (confirm('Reset all progress?')) { progress = {}; save(); build(); } };
+$('btnAgain').onclick = () => grade('again');
+$('btnGood').onclick = () => grade('good');
+$('shuffle').onclick = build;
+$('reset').onclick = () => { if (confirm('Reset all progress?')) { progress = {}; save(); build(); } };
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space') { e.preventDefault(); flip(); }
+  if (e.code === 'Space') { e.preventDefault(); reveal(); }
   if (e.key === '1') grade('again');
   if (e.key === '2') grade('good');
 });
